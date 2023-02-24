@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example 1 for The WWW as a Rube Goldberg machine</title>
+</head>
+<body>
+    <button role="button" id="initTrigger">START!</button>
+    <section id="cocktailSection"></section>
+    <section id="NASAimage"></section>
+    <section id="Poems"></section>
+    <section id="PicsumImg"></section>
+
+
+    <script>
+        const triggerButton = document.getElementById('initTrigger')
+        const cocktailSection = document.getElementById('cocktailSection')
+        //
+        //const NASAsection = document.getElementById('NASAimage')
+        const PoetrySection = document.getElementById('Poems')
+        const PicsumSection = document.getElementById('PicsumImg')
+
+        const randomCocktailURL = "https://www.thecocktaildb.com/api/json/v1/1/random.php"
+
+        //const nasaAPODurl = "https://api.nasa.gov/planetary/apod"
+        //const nasaAPIkey = "QqosQozhLr1bzqBRmE3NCPHAwylPUUoxj26qD4Vm"
+
+        const PoetryDBauthorurl = "https://poetrydb.org/author"
+        const PoetryDB = "https://poetrydb.org/"
+        const Picsumurl = "https://picsum.photos/v2/list"
+        const placekeanu = "https://placekeanu.com/200/200/"
+
+        const fetchCocktailData = () => {
+            fetch(randomCocktailURL)
+                .then((response) =>  response.json() )
+                .then((payload) => appendCocktailData(payload))
+
+        }
+
+        const appendCocktailData = (data) => {
+            //console.log(data)
+            const firstDrink = data.drinks[0]
+            const drinkName = firstDrink.strDrink
+            const drinkImg = firstDrink.strDrinkThumb
+            const drinkID = firstDrink.idDrink
+
+            const nameHeader = document.createElement('h3')
+            nameHeader.innerText = "We had " + drinkName
+            cocktailSection.appendChild(nameHeader)
+
+            const image = document.createElement('img')
+            image.src = drinkImg
+            image.alt = "image of " + drinkName
+            cocktailSection.appendChild(image)
+
+            // const a = new Date(firstDrink.dateModified)
+            // const dateForNASAAPI = a.getUTCFullYear().toString()+"-"+(a.getUTCMonth()+1).toString()+"-"+a.getUTCDay()
+
+            // fetchNASAData(dateForNASAAPI)
+            fetchPoemAuthors(drinkID)
+        }
+
+        // const fetchNASAData = (picDate) => {
+        //     const fetchURL = nasaAPODurl+"?"+nasaAPIkey+"&"+"date="+picDate
+        //     fetch(fetchURL)
+        //         .then((payload) =>  payload.json() )
+        //         .then((json) => appendNASAData(json))
+        // }
+
+        // const appendNASAData = (data) => {
+        //     // console.log(data)
+        //     const picTitle = data.title
+        //     const imgURL = data.url
+
+        //     const picHeader = document.createElement('h3')
+        //     picHeader.innerText = picTitle
+        //     NASAsection.appendChild(picHeader)
+
+        //     const nasaImg = document.createElement('img')
+        //     nasaImg.src = imgURL
+        //     nasaImg.alt = "the image of " + picTitle
+        //     NASAsection.appendChild(nasaImg)
+        // }
+//=============================================================================================================================================================
+        const fetchPoemAuthors = (peomauthorgetting) => {
+            fetch(/*PoetryDBauthorurl*/ PoetryDB + 'author')
+                 .then((payload) =>  payload.json() )
+                 .then((json) => getAnAuthor(json, peomauthorgetting))
+         }
+
+        const getAnAuthor = (data, drinkID) =>{
+            // console.log(data)
+             const NumberofAuthors = data.authors.length
+             const WhichAuthor = drinkID % NumberofAuthors
+             const NameOfAuthor = data.authors[WhichAuthor]
+
+             fetchPoemTitles(NameOfAuthor)
+         }
+          
+        const fetchPoemTitles = (NameOfAuthor) =>{
+        //      const 
+                fetch(PoetryDB + 'author/' + NameOfAuthor + '/title')
+                .then((payload) =>  payload.json() )
+                .then((json) => getATitle(json, NameOfAuthor))
+        }
+         
+        const getATitle = (data, NameOfAuthor) => {
+            const randomIndex = Math.floor(Math.random() * data.length);
+            const TitleObject =  data[randomIndex]
+            const Title = TitleObject.title;
+
+            fetchPoemDetails(Title)
+        }
+
+        // TODO: write function for getting actual poem lines
+
+        const fetchPoemDetails = (Title) => {
+            // fetch(PoetryDB + 'title/' + 'findTheTitleDude')
+            fetch(PoetryDB + 'title/' + Title)
+                .then((payload) =>  payload.json() )
+                .then((json) => getPoem(json))
+        }
+        
+        const getPoem = (data) => {
+            //console.log('did I get the poem?????')
+            //console.log(data);
+
+            const Mypoem = data[0]
+            const TitleofPoem = Mypoem.title
+            const AuthorofPoem = Mypoem.author
+            const Lines = Mypoem.lines
+
+            const PoemTitleElement = document.createElement('h2')
+            PoemTitleElement.innerText = TitleofPoem
+            Poems.appendChild(PoemTitleElement)
+
+            const PoemAuthorElement = document.createElement('h4')
+            PoemAuthorElement.innerText = AuthorofPoem
+            Poems.appendChild(PoemAuthorElement)
+            
+            for (var i = 0; i < Lines.length; i++) {
+            //console.log(myStringArray[i]);
+                const PoemLineElement = document.createElement('p');
+                PoemLineElement.innerText = Lines[i];
+                Poems.appendChild(PoemLineElement)
+
+            }
+            
+            const PoemID = Lines.length
+            fetchPicsumImg(PoemID)
+        }
+// ============================================================================================================================================================
+        const fetchPicsumImg = (PID) =>{
+            fetch(Picsumurl)
+            .then((payload) =>  payload.json() )
+            .then((json) => appendPicsumImg(json, PID))
+
+        }
+        
+         const appendPicsumImg = (data, PoemID) =>{
+             const HowmanyPic = data.length
+             const Picid = PoemID % HowmanyPic
+             console.log("pic id", Picid)
+             const ImageURL = data[Picid].url 
+             const ImageAuthorName = data[Picid].author
+
+             const newimagetex = document.createElement('h1')
+             newimagetex.innerText = "This should be an Image taken by " + ImageAuthorName + ", but I don't have access because of CORB, here is the link:' " + ImageURL + " ', look it up for yourself!"
+             PicsumImg.appendChild(newimagetex)
+
+            //  const newimage = document.createElement('img')
+            //  newimage.src = ImageURL
+            //  newimage.alt = "Image taken from" + ImageAuthorName
+            //  PicsumImg.appendChild(newimage)
+                // const KeImage = document.createElement('img')
+                // keaImg.src = placekeanu + "PoemID"
+                // KeanuImg.appendChild(keaImg)
+         }
+// =====================================================================================================================
+        triggerButton.addEventListener("click", fetchCocktailData)
+    </script>
+</body>
+</html>
